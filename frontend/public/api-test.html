@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Connection Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .result { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button { margin: 5px; padding: 10px 15px; }
+    </style>
+</head>
+<body>
+    <h1>API Connection Test</h1>
+    
+    <button onclick="testSession()">Test Session API</button>
+    <button onclick="testRegister()">Test Register API</button>
+    <button onclick="testCORS()">Test CORS</button>
+    
+    <div id="results"></div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5000/api';
+        
+        function addResult(message, isSuccess = true) {
+            const resultsDiv = document.getElementById('results');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `result ${isSuccess ? 'success' : 'error'}`;
+            resultDiv.innerHTML = `<strong>${new Date().toLocaleTimeString()}</strong>: ${message}`;
+            resultsDiv.appendChild(resultDiv);
+        }
+        
+        async function testSession() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/session`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+                
+                const data = await response.json();
+                addResult(`Session API Success: ${JSON.stringify(data)}`, true);
+            } catch (error) {
+                addResult(`Session API Error: ${error.message}`, false);
+                console.error('Session API Error:', error);
+            }
+        }
+        
+        async function testRegister() {
+            try {
+                const testData = {
+                    email: 'test@example.com',
+                    password: 'testpassword123',
+                    full_name: 'Test User',
+                    phone_number: '9876543210',
+                    date_of_birth: '1990-01-01',
+                    aadhaar_number: '123456789012',
+                    pan_number: 'ABCDE1234F',
+                    address_line1: 'Test Address',
+                    city: 'Test City',
+                    state: 'Delhi',
+                    pincode: '110001'
+                };
+                
+                const response = await fetch(`${API_BASE_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(testData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    addResult(`Register API Success: ${JSON.stringify(data)}`, true);
+                } else {
+                    addResult(`Register API Error (${response.status}): ${JSON.stringify(data)}`, false);
+                }
+            } catch (error) {
+                addResult(`Register API Error: ${error.message}`, false);
+                console.error('Register API Error:', error);
+            }
+        }
+        
+        async function testCORS() {
+            try {
+                // Test OPTIONS request
+                const optionsResponse = await fetch(`${API_BASE_URL}/auth/session`, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Origin': 'http://localhost:3000',
+                        'Access-Control-Request-Method': 'GET'
+                    }
+                });
+                
+                addResult(`CORS OPTIONS Success: ${optionsResponse.status}`, true);
+                
+                // Test actual GET request
+                const getResponse = await fetch(`${API_BASE_URL}/auth/session`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+                
+                const data = await getResponse.json();
+                addResult(`CORS GET Success: ${JSON.stringify(data)}`, true);
+                
+            } catch (error) {
+                addResult(`CORS Test Error: ${error.message}`, false);
+                console.error('CORS Test Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>
